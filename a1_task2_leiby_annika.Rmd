@@ -1,0 +1,104 @@
+---
+title: "a1_task2_leiby_annika"
+author: "Annika Leiby"
+date: "1/24/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+# objective is to perform PCA, create a biplot, and interpret the results
+
+#A useful descriptive introductory summary (3 - 4 sentences) that helps the audience understand the data (include a citation as necessary) and what you’ll be exploring
+#All of your organized and well-annotated code (with warnings/messages suppressed) you wrote to wrangle data then run PCA, and to create a professional looking PCA biplot that appears (with a caption) in your knitted HTML
+#A brief summary (nicely formatted and professionally written bulletpoints are fine) highlighting some major takeaways from your PCA that can be gleaned from the biplot
+
+```
+
+```{r}
+#This assignment will complete a PCA analysis, create a biplot, and interpret the PCA and biplot findings on environmental and climate data at the country level. The data comesfrom Google Earth Engine and can be accessed at https://www.kaggle.com/zanderventer/environmental-variables-for-world-countries/data. 
+```
+
+```{r}
+# Attach Packages 
+
+library(tidyverse)
+library(dplyr)
+library(janitor)
+library(here)
+library(ggfortify)
+library(gghighlight)
+library(lubridate)
+library(plotly)
+
+```
+
+```{r}
+# Read in the data 
+# Use select() function to selected variables wanted for PCA. I selected for country, elevation, slope, tree_canopy_cover, rain_mean_annual, temp_mean_annual, wind. 
+# Use drop_na() function to remove rows with N/As
+
+env_country <- read_csv("world_env_vars.csv") %>%
+  clean_names() %>%
+  select(country, elevation, slope, tree_canopy_cover, rain_mean_annual, temp_mean_annual, wind) %>%
+    drop_na() 
+```
+
+```{r}
+# Use select() and set to -country because it is categorical and can not be included in the pca
+# Use scale() function to get all variables units on the same scale ready for PCA 
+# Use function prcomp() to run the PCA. There are 6 different PCA for the number of variables I selected.
+
+pca_country_env <- env_country %>%
+  select(-country) %>%
+  scale() %>%
+  prcomp()
+
+
+
+# Look at the loadings for each variable
+pca_country_env$rotation
+  
+```
+
+```{r}
+
+# Make a biplot to visualize the PCA results.
+# Use autoplot() function to create a biplot, it is built to understand the PCA outcomes. 
+# Use loadings = TRUE to display arrows that show loadings
+# Use loadings.label = TRUE to label the loading arrows with the variables 
+# Used this website https://cran.r-project.org/web/packages/ggfortify/vignettes/plot_pca.html to figure out how to better customize the biplot to make it look better. 
+
+autoplot(pca_country_env,
+         data = env_country,
+         loadings = TRUE,
+         loadings.size = 1.5,
+         loadings.label = TRUE,
+         loadings.colour = "blue",
+         loadings.label.colour = "red",
+         loadings.label.size = 2) +
+  theme_minimal() +
+  labs(title = "PCA Biplot of International Environmental and Climatic Data ")
+
+
+```
+
+```{r}
+# Interpret the biplot. 
+
+# As the axis shows PC1 accounts for ~38.68% variance and PC2 accounts for ~30.44%. The total variance accounted by the first two PC is 69.12%. 
+
+# Mean anual rainfall and tree canopy cover are strongly correlated since the arrows are almost at the same angle.
+# Slope and elevation are also fairly strongly correlated.
+# Wind, slope, and elevation are correlated but not very strongly.
+```
+
+```{r}
+screeplot(pca_country_env, type = "barplot")
+
+pca_country_env$rotation
+```
+
